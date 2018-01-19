@@ -6,6 +6,8 @@ An animated shortest path solver
 
 Visualizes how the (Dijkstra) shortest path algorithm works
 
+Try it: https://timothypratley.github.io/shortest-path-visual
+
 ## Setup
 
 To get an interactive development environment run:
