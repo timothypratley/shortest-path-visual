@@ -1,4 +1,4 @@
-(ns shortest-path-visual.d3
+(ns shortest-path-visual.force-directed
   (:require
     [cljsjs.d3]
     [cljs.test]
@@ -157,7 +157,7 @@
 
 (defn shape-background [shape r node-color rank-scale selected?]
   [(shapes shape circle-background)
-   {:fill (or node-color "#9ecae1")
+   {:fill (or node-color "white")
     :stroke (if selected?
               "#6699aa"
               "#9ecae1")
