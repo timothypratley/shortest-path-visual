@@ -28,21 +28,22 @@
      :on-change (fn import-changed [e] (data/import-graph e g))}]])
 
 (defn inspect [x]
-  [:table
-   {:style {:width "100%"
-            :text-align "left"}}
-   [:thead
-    (into
-      [:tr]
-      (for [k (keys x)]
-        [:th k]))]
-   [:tbody
-    (into
-      [:tr]
-      (for [v (vals x)]
-        [:td {:style {:vertical-align "top"
-                      :width "20%"}}
-         [:pre (with-out-str (pprint/pprint v))]]))]])
+  [:div
+   [:table
+    {:style {:width "100%"
+             :text-align "left"}}
+    [:thead
+     (into
+       [:tr]
+       (for [k (keys x)]
+         [:th k]))]
+    [:tbody
+     (into
+       [:tr]
+       (for [v (vals x)]
+         [:td {:style {:vertical-align "top"
+                       :width "20%"}}
+          [:pre (with-out-str (pprint/pprint v))]]))]]])
 
 (defn shortest-path-solver []
   (reagent/with-let
@@ -51,23 +52,28 @@
      target-node (reagent/atom nil)
      selected-id (reagent/atom nil)
      selected-edge-type (reagent/atom nil)
+     searching? (reagent/atom false)
      watch (add-watch
              selected-id
              :watch
              (fn [k r a b]
-               (when b
+               ;; TODO: make start/end selection more explicit
+               (when (and b (not @searching?))
                  (cond
-                   (and @start-node @target-node)
+                   (and @start-node @target-node (not= @start-node b))
                    (do (reset! start-node @target-node)
                        (reset! target-node b)
-                       (algorithm/shortest-path g @start-node @target-node))
-                   @start-node
+                       (reset! searching? true)
+                       (algorithm/shortest-path g @start-node @target-node searching?))
+                   (and @start-node (not= @start-node b))
                    (do (reset! target-node b)
-                       (algorithm/shortest-path g @start-node @target-node))
+                       (reset! searching? true)
+                       (algorithm/shortest-path g @start-node @target-node searching?))
                    :else (reset! start-node b)))))]
     [:div
      [:button {:on-click (fn [e] (reset! g data/tiny))} "Example"]
      [:div [import-button g]]
+     [:center [:h2 (:status @visualize/vis)]]
      [d3/graph g node-types edge-types selected-id selected-edge-type callbacks]
      [:div
       [:div "From: " (or @start-node "<click on a node>")]

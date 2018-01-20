@@ -1,5 +1,7 @@
 (ns shortest-path-visual.visualize
-  (:require [reagent.core :as reagent]))
+  (:require [reagent.core :as reagent]
+            [clojure.set :as set]
+            [clojure.string :as string]))
 
 (def vis
   (reagent/atom nil))
@@ -11,59 +13,96 @@
    :yellow "#eab700"
    :green "#718c00"
    :aqua "#3e999f"
+   :aqua2 "#6ec9cf"
    :blue "#4271ae"
    :purple "#8959a8"})
 
 (defn visualize-start [g start-node target-node]
   (reset! vis {:distance 0
-               :status :searching
+               :status "Initialize"
                :edge nil
                :visited {}
                :candidates {}})
-  (swap! g assoc-in [:nodes start-node :node/color] (:green colors))
-  (swap! g assoc-in [:nodes target-node :node/color] (:blue colors)))
+  (doseq [node (keys (:nodes @g))]
+    (swap! g assoc-in [:nodes node :node/color]
+           (cond
+             (= node start-node) (:green colors)
+             (= node target-node) (:blue colors)
+             :else nil)))
+  (doseq [[from es] (:edges @g)
+          [to edge] es]
+    (swap! g assoc-in [:edges from to :edge/color] nil)))
 
-(defn visualize-expand [g visited candidates]
-  (swap! vis assoc
-         :visited visited
-         :candidates candidates)
-  (swap! g update :nodes #(merge-with merge %1 %2)
-         (zipmap (keys candidates)
-                 (repeat {:node/color (:aqua colors)})))
-  (doseq [{:keys [edge/from edge/to]} (vals candidates)]
-    (swap! g assoc-in [:edges from to :edge/color] (:aqua colors))))
+(defn visualize-expand [g visited candidates expanded-candidates]
+  (let [new-candidates (set/difference
+                         (set (keys expanded-candidates))
+                         (set (keys candidates)))]
+    (swap! vis assoc
+           :status (str "Expand to new candidates: "
+                        (if (seq new-candidates)
+                          (string/join ", " (sort new-candidates))
+                          "none"))
+           :visited visited
+           :candidates expanded-candidates)
+    (doseq [node-id (keys expanded-candidates)]
+      (swap! g assoc-in [:nodes node-id :node/color]
+             (if (new-candidates node-id)
+               (:aqua2 colors)
+               (:aqua colors))))
+    (doseq [{:keys [edge/from edge/to]} (vals expanded-candidates)]
+      (swap! g assoc-in [:edges from to :edge/color]
+             (if (new-candidates to)
+               (:aqua2 colors)
+               (:aqua colors))))))
 
-(defn visualize-visit [g edge visited candidates distance]
+(defn visualize-visit [g [closest-node from :as edge] visited candidates distance]
   (swap! vis assoc
+         :status (str "Visit closest candidate " closest-node " via " from)
          :edge edge
          :visited visited
          :candidates candidates
          :distance distance)
-  (swap! g update :nodes #(merge-with merge %1 %2)
-         (zipmap (keys visited)
-                 (repeat {:node/color "yellow"}))))
+  (doseq [[to from] visited :when from]
+    (swap! g assoc-in [:nodes to :node/color]
+           (if (= to closest-node)
+             (:orange colors)
+             (:yellow colors)))
+    (swap! g assoc-in [:edges from to :edge/color]
+           (if (= to closest-node)
+             (:orange colors)
+             (:yellow colors)))))
+
+(defn backtrack [g visited [to & more :as path]]
+  (if-let [from (visited to)]
+    (do
+      (swap! vis assoc
+             :status (str "Backtrack from " from " to " to ": "
+                          (string/join ", " path)))
+      (swap! g assoc-in [:nodes from :node/color] (:blue colors))
+      (swap! g assoc-in [:edges from to :edge/color] (:blue colors))
+      #(backtrack g visited (cons from path)))
+    (swap! vis assoc
+           :status (str "Found path: "
+                        (string/join ", " path)))))
 
 (defn visualize-solution [g visited target-node distance]
   (swap! vis assoc
          :visited visited
          :distance distance
-         :status :success)
+         :status "Backtrack")
   (swap! g assoc-in [:nodes target-node :node/color] (:blue colors))
-  (loop [to target-node]
-    (when-let [from (visited to)]
-      (swap! g assoc-in [:nodes from :node/color] (:blue colors))
-      (swap! g assoc-in [:edges from to :edge/color] (:blue colors))
-      (recur from))))
+  #(backtrack g visited (list target-node)))
 
 (defn visualize-fail [g]
   (swap! vis assoc
          :status :failed))
 
 (defn slow-trampoline
-  ([t f]
-   (let [ret (f)]
-     (if (fn? ret)
-       (js/setTimeout #(slow-trampoline t ret) t)
-       ret)))
-  ([t f & args]
-   (slow-trampoline t #(apply f args))))
+  ([t searching? f]
+   (let [result (f)]
+     (if (fn? result)
+       (js/setTimeout #(slow-trampoline t searching? result) t)
+       (do (reset! searching? false)
+           result))))
+  ([t searching? f & args]
+   (slow-trampoline t searching? #(apply f args))))

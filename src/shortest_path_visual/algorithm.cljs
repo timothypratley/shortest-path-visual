@@ -20,6 +20,10 @@
 
 (declare expand)
 
+(defn start [g start-node target-node]
+  (visualize/visualize-start g start-node target-node)
+  #(expand g 0 start-node target-node {start-node nil} {}))
+
 (defn visit [g target-node visited candidates]
   (let [[to from distance :as edge] (min-edge candidates)
         visited-result (conj visited edge)
@@ -32,7 +36,7 @@
 
 (defn expand [g distance current-node target-node visited candidates]
   (let [expanded-candidates (add-candidates g distance current-node visited candidates)]
-    (visualize/visualize-expand g visited expanded-candidates)
+    (visualize/visualize-expand g visited candidates expanded-candidates)
     #(visit g target-node visited expanded-candidates)))
 
 (defn shortest-path-step [g distance current-node target-node visited candidates]
@@ -46,10 +50,9 @@
         ;; timeout
         :else (recur g distance-result to target-node v candidates)))))
 
-(defn shortest-path [g start-node target-node]
+(defn shortest-path [g start-node target-node searching?]
   ;;(prn "SP" (shortest-path-step g 0 start-node target-node {start-node nil} {}))
-  (visualize/visualize-start g start-node target-node)
-  (visualize/slow-trampoline 2000 expand g 0 start-node target-node {start-node nil} {}))
+  (visualize/slow-trampoline 2000 searching? start g start-node target-node))
 
 
 
