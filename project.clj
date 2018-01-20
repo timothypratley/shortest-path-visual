@@ -10,9 +10,9 @@
 
   :dependencies [[org.clojure/clojure "1.9.0-beta4"]
                  [org.clojure/clojurescript "1.9.946"]
-                 [org.clojure/core.async  "0.3.443"]
                  [reagent "0.7.0"]
-                 [cljsjs/d3 "4.12.0-0"]]
+                 [cljsjs/d3 "4.12.0-0"]
+                 [instaparse "1.4.8"]]
 
   :plugins [[lein-figwheel "0.5.14"]
             [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]]
@@ -26,14 +26,14 @@
                 ;; The presence of a :figwheel configuration here
                 ;; will cause figwheel to inject the figwheel client
                 ;; into your build
-                :figwheel {:on-jsload "shortest-path-visual.core/on-js-reload"
+                :figwheel {:on-jsload "shortest-path-visual.main/on-js-reload"
                            ;; :open-urls will pop open your application
                            ;; in the default browser once Figwheel has
                            ;; started and compiled your application.
                            ;; Comment this out once it no longer serves you.
                            :open-urls ["http://localhost:3449/index.html"]}
 
-                :compiler {:main shortest-path-visual.core
+                :compiler {:main shortest-path-visual.main
                            :asset-path "js/compiled/out"
                            :output-to "resources/public/js/compiled/shortest_path_visual.js"
                            :output-dir "resources/public/js/compiled/out"
@@ -47,7 +47,7 @@
                {:id "min"
                 :source-paths ["src"]
                 :compiler {:output-to "resources/public/js/compiled/shortest_path_visual.js"
-                           :main shortest-path-visual.core
+                           :main shortest-path-visual.main
                            :optimizations :advanced
                            :pretty-print false}}]}
 

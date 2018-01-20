@@ -10,7 +10,7 @@
 (defn main []
   [:div
    [:h2 "Shortest path visual"]
-   [view/graph-loader]])
+   [view/shortest-path-solver]])
 
 (reagent/render-component
   [main]

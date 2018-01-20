@@ -49,11 +49,11 @@
          :distance distance
          :status :success)
   (swap! g assoc-in [:nodes target-node :node/color] (:blue colors))
-  (loop [n target-node]
-    (when-let [v (visited n)]
-      (swap! g assoc-in [:nodes v :node/color] (:blue colors))
-      (swap! g assoc-in [:edges v n :edge/color] (:blue colors))
-      (recur v))))
+  (loop [to target-node]
+    (when-let [from (visited to)]
+      (swap! g assoc-in [:nodes from :node/color] (:blue colors))
+      (swap! g assoc-in [:edges from to :edge/color] (:blue colors))
+      (recur from))))
 
 (defn visualize-fail [g]
   (swap! vis assoc

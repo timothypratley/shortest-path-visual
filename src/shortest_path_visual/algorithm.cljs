@@ -46,10 +46,10 @@
         ;; timeout
         :else (recur g distance-result to target-node v candidates)))))
 
-(defn shortest-path [g]
-  ;;(prn "SP" (shortest-path-step g 0 "0" "5" {} {}))
-  (visualize/visualize-start g "0" "5")
-  (visualize/slow-trampoline 2000 expand g 0 "0" "5" {} {}))
+(defn shortest-path [g start-node target-node]
+  ;;(prn "SP" (shortest-path-step g 0 start-node target-node {start-node nil} {}))
+  (visualize/visualize-start g start-node target-node)
+  (visualize/slow-trampoline 2000 expand g 0 start-node target-node {start-node nil} {}))
 
 
 

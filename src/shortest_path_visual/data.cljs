@@ -1,5 +1,8 @@
 (ns shortest-path-visual.data
-  (:require [clojure.string :as string]))
+  (:require
+    [clojure.string :as string]
+    [shortest-path-visual.csv :as csv]
+    [shortest-path-visual.dot :as dot]))
 
 (def tiny
   {:nodes
@@ -141,8 +144,9 @@
                          :db/id n}))}
       (map #(string/split % #" ") edges))))
 
-(defn import-graph [e g deserialize]
+(defn import-graph [e g]
   (when-let [file (aget e "target" "files" 0)]
-    (if (ends-with (.-name file) ".txt")
-      (do (read-file g file deserialize))
+    (if-let [r (cond (ends-with (.-name file) ".txt") csv/read-graph
+                     (ends-with (.-name file) ".dot") dot/read-graph)]
+      (read-file g file r)
       (js/alert "Must supply a .dot or .txt file"))))
