@@ -19,7 +19,7 @@
 
 (defn visualize-start [g start-node target-node]
   (reset! vis {:distance 0
-               :status "Initialize"
+               :status (str "Initialize search from " start-node " to " target-node)
                :edge nil
                :visited {}
                :candidates {}})
@@ -57,7 +57,7 @@
 
 (defn visualize-visit [g [closest-node from :as edge] visited candidates distance]
   (swap! vis assoc
-         :status (str "Visit closest candidate " closest-node " via " from)
+         :status (str "Visit closest candidate: " closest-node " via " from)
          :edge edge
          :visited visited
          :candidates candidates
@@ -76,7 +76,7 @@
   (if-let [from (visited to)]
     (do
       (swap! vis assoc
-             :status (str "Backtrack from " from " to " to ": "
+             :status (str "Backtrack from " from " to " to ". Path is: "
                           (string/join ", " path)))
       (swap! g assoc-in [:nodes from :node/color] (:blue colors))
       (swap! g assoc-in [:edges from to :edge/color] (:blue colors))
@@ -89,13 +89,13 @@
   (swap! vis assoc
          :visited visited
          :distance distance
-         :status "Backtrack")
+         :status (str "Found target node " target-node))
   (swap! g assoc-in [:nodes target-node :node/color] (:blue colors))
   #(backtrack g visited (list target-node)))
 
 (defn visualize-fail [g]
   (swap! vis assoc
-         :status :failed))
+         :status "No path found"))
 
 (defn slow-trampoline
   ([t searching? f]
