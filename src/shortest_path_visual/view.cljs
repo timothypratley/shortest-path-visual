@@ -53,23 +53,23 @@
      selected-id (reagent/atom nil)
      selected-edge-type (reagent/atom nil)
      searching? (reagent/atom false)
-     watch (add-watch
-             selected-id
-             :watch
-             (fn [k r a b]
-               ;; TODO: make start/end selection more explicit
-               (when (and b (not @searching?))
-                 (cond
-                   (and @start-node @target-node (not= @start-node b))
-                   (do (reset! start-node @target-node)
-                       (reset! target-node b)
-                       (reset! searching? true)
-                       (algorithm/shortest-path g @start-node @target-node searching?))
-                   (and @start-node (not= @start-node b))
-                   (do (reset! target-node b)
-                       (reset! searching? true)
-                       (algorithm/shortest-path g @start-node @target-node searching?))
-                   :else (reset! start-node b)))))]
+     _ (add-watch
+         selected-id
+         :watch
+         (fn [k r a b]
+           ;; TODO: make start/end selection more explicit
+           (when (and b (not @searching?))
+             (cond
+               (and @start-node @target-node (not= @start-node b))
+               (do (reset! start-node @target-node)
+                   (reset! target-node b)
+                   (reset! searching? true)
+                   (algorithm/shortest-path g @start-node @target-node searching?))
+               (and @start-node (not= @start-node b))
+               (do (reset! target-node b)
+                   (reset! searching? true)
+                   (algorithm/shortest-path g @start-node @target-node searching?))
+               :else (reset! start-node b)))))]
     [:div
      [:button {:on-click (fn [e] (reset! g data/tiny))} "Example"]
      [:div [import-button g]]

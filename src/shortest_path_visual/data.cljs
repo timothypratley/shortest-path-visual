@@ -6,14 +6,14 @@
 
 (def tiny
   {:nodes
-   {"0" {:node/name "0", :db/id "0"},
-    "1" {:node/name "1", :db/id "1"},
-    "2" {:node/name "2", :db/id "2"},
-    "3" {:node/name "3", :db/id "3"},
-    "4" {:node/name "4", :db/id "4"},
-    "5" {:node/name "5", :db/id "5"},
-    "6" {:node/name "6", :db/id "6"},
-    "7" {:node/name "7", :db/id "7"}},
+   {"0" {:node/name "A", :db/id "0"},
+    "1" {:node/name "B", :db/id "1"},
+    "2" {:node/name "C", :db/id "2"},
+    "3" {:node/name "D", :db/id "3"},
+    "4" {:node/name "E", :db/id "4"},
+    "5" {:node/name "F", :db/id "5"},
+    "6" {:node/name "G", :db/id "6"},
+    "7" {:node/name "H", :db/id "7"}},
    :edges
    {"4"
     {"5"

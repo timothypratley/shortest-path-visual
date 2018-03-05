@@ -188,7 +188,7 @@
           x (.-x particle)
           y (.-y particle)
           selected? (= id @selected-id)
-          rank-scale (if max-pagerank (/ pagerank max-pagerank) 0.5)
+          rank-scale 0.7
           r (scale-dist node-count rank-scale)]
       ^{:key id}
       [:g
@@ -233,13 +233,13 @@
 
 (defn draw-edge [edge-types edge simulation mouse-down? selected-id {:keys [shift-click-edge]}]
   (when-let [idxs (.-idxs simulation)]
-    (let [{:keys [db/id edge/type edge/from edge/to edge/color]} edge
+    (let [{:keys [db/id edge/type edge/from edge/to edge/color edge/weight]} edge
           idx (idxs id)
           from-idx (idxs from)
           to-idx (idxs to)]
       ;; TODO: isolate data specific stuff here
       (when (and idx from-idx to-idx)
-        (let [{:keys [edge/dasharray weight negate]} (get @edge-types type)
+        (let [{:keys [edge/dasharray negate]} (get @edge-types type)
               particle (aget (.nodes simulation) idx)
               x2 (.-x particle)
               from-particle (aget (.nodes simulation) from-idx)
@@ -296,15 +296,24 @@
              [:path
               {:fill "none"
                :d (str "M " (- midx xo2) "," (- midy yo2) " L " (+ midx xo2) "," (+ midy yo2))}])
-           [:polygon
-            {:points "0,-5 0,5 12,0"
-             :fill (cond-> (or color "#9ecae1")
-                           selected? (darken))
-             :transform (str "translate(" midx "," midy
-                             ") rotate(" (rise-over-run (- y3 y1) (- x3 x1)) ")"
+           [:g
+            {:transform (str "translate(" midx "," midy
+                             ") "
+
                              (when selected?
-                               " scale(1.25,1.25)"))
-             :style {:cursor "pointer"}}]])))))
+                               " scale(1.25,1.25)"))}
+            [:polygon
+             {:points "0,-5 0,5 12,0"
+              :fill (cond-> (or color "#9ecae1")
+                            selected? (darken))
+              :transform (str "rotate(" (rise-over-run (- y3 y1) (- x3 x1)) ")")
+              :style {:cursor "pointer"}}]
+            [:text
+             {:fill "black"
+              :stroke "none"
+              :font-size "9"
+              :text-anchor "middle"}
+             weight]]])))))
 
 (defn bounds [[minx miny maxx maxy] simulation-node]
   [(min minx (.-x simulation-node))
@@ -410,23 +419,27 @@
                         (for [[from tos] (:edges @g)
                               [to edge] tos]
                           ;; TODO: actually want to see all types
-                              ;:when (= (:edge/type edge) @selected-edge-type)]
+                          ;:when (= (:edge/type edge) @selected-edge-type)]
                           ;; TODO: not sure I like this
                           (assoc edge :edge/from from
                                       :edge/to to
                                       :db/id (str from "-to-" to)))))
+     counts (reaction (count @nodes))
      snapshot (reagent/atom {:bounds [0 0 0 0]
                              :particles @nodes})
      simulation (create-simulation)
      mouse-down? (reagent/atom nil)
-     watch (reagent/track!
-             (fn a-graph-watcher []
-               (update-simulation simulation node-types edge-types @nodes @matching-edges)
-               (restart-simulation simulation)))]
-    (.on simulation "tick"
-         (fn simulation-tick []
-           (swap! snapshot update-bounds (.nodes simulation))))
+     _ (add-watch counts :watch-counts
+                  (fn a-graph-watcher [k r a b]
+                    (prn "HI")
+                    (update-simulation simulation node-types edge-types @nodes @matching-edges)
+                    (restart-simulation simulation)))
+     _ (.on simulation "tick"
+          (fn simulation-tick []
+            (swap! snapshot update-bounds (.nodes simulation))))]
+    ;; needed to trigger the watch omg
+    (prn @counts "Count")
     [draw-graph (reagent/current-component) node-types edge-types nodes matching-edges snapshot simulation mouse-down? selected-id callbacks]
     (finally
-      (reagent/dispose! watch)
+      (remove-watch counts :watch-counts)
       (.stop simulation))))

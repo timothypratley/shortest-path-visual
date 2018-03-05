@@ -1,0 +1,103 @@
+= Shortest Path Algorithm
+
+
+[position="center-up"]
+== Insight #1
+
+[position="center-up"]
+For any given start node, we can find one shortest path to its closest neighbor.
+
+
+== Insight #2
+
+We need to expand the list of candidates to find the second shortest path.
+
+
+== Insight #3
+
+We only need to expand the search from the node that we confirmed to be a shortest path.
+
+
+== Insight #4
+
+After expanding the list of candidates we can find the shortest path to another node.
+
+
+== Insight #5
+
+Candidates must be selected relative to the start node.
+
+
+== Insight #6
+
+We are building a minimum spanning tree.
+
+
+== Insight #7
+We may discover multiple edges to reach a candidate but we only need to keep track of the minimal one.
+
+
+== Insight #8
+For a single path we can terminate at the target node as a special case.
+
+
+== Insight #9
+
+We need to record predecessors so that we can build a path result by backtracking.
+
+
+== Shortest Path
+
+* Start at the start node
+* Add the start node neighbors as candidates
+* Visit the closest candidate relative to the start node
+* Record the predecessor to the visited node
+* Add the neighbors of the visited node as candidates
+* Choose the closest candidate relative to the start node to visit
+* … repeat the visit / expand cycle until we reach the target node …
+* Backtrack to the start node to return the path result.
+
+
+== Shortest Path
+
+* expanding the set of candidates, and
+* visiting the candidate closest to the start node.
+
+
+== Implementation details
+
+* Mark the start node as visited
+* Minimum total weight candidate
+* Mark visisted
+* Replace candidates
+* Store predecessors
+
+
+== Improvement #1
+
+Use a priority queue to store the candidates
+
+
+== Improvement #2
+
+Use a heuristic to guide the search
+
+
+== Guess
+
+Cost of path = Cost so far + distance
+
+
+== Benefits
+
+* Visit candidates closer to the target first
+* Still discover the minimum cost
+* Early termination becomes useful
+
+
+== Summary
+
+* Expand and visit
+* Use a priority queue
+* Use a minimum bound guess 
+

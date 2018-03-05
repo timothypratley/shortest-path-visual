@@ -6,16 +6,28 @@
   (let [{:keys [edge/to edge/from distance]} (first (sort-by :distance (vals candidates)))]
     [to from distance]))
 
-(defn add-candidates [g distance current-node visited candidates]
+(defn heuristic [g from to]
+  (let [{x1 :x, y1 :y} (get-in @g [:nodes from])
+        {x2 :x, y2 :y} (get-in @g [:nodes to])]
+    (if (and x1 x2 y1 y2)
+      (js/Math.sqrt (+ (js/Math.pow (- x2 x1) 2)
+                       (js/Math.pow (- y2 y1) 2)))
+      0)))
+
+;; TODO: distance?
+(defn add-candidates [g distance current-node target-node visited candidates]
   (apply dissoc
          (merge candidates
-                (for [[k v] (get-in @g [:edges current-node])
+                (for [[k {:keys [edge/weight edge/to] :as v}] (get-in @g [:edges current-node])
+                      :let [d (+ distance
+                                 (or weight 1)
+                                 (heuristic g to target-node))]
                       :when
-                      (or (not (candidates (:edge/to v)))
-                          (< (+ distance (:edge/weight v 1)) (:distance (candidates (:edge/to v)))))]
+                      (or (not (candidates to))
+                          (< d (:distance (candidates to))))]
                   [k (assoc
-                       (select-keys v [:edge/weight :edge/from :edge/to :distance])
-                       :distance (+ distance (:edge/weight v 1)))]))
+                       (select-keys v [:edge/weight :edge/from :edge/to])
+                       :distance d)]))
          (keys visited)))
 
 (declare expand)
@@ -35,12 +47,12 @@
       :else #(expand g distance to target-node visited-result candidates-result))))
 
 (defn expand [g distance current-node target-node visited candidates]
-  (let [expanded-candidates (add-candidates g distance current-node visited candidates)]
+  (let [expanded-candidates (add-candidates g distance current-node target-node visited candidates)]
     (visualize/visualize-expand g visited candidates expanded-candidates)
     #(visit g target-node visited expanded-candidates)))
 
 (defn shortest-path-step [g distance current-node target-node visited candidates]
-  (let [candidates (add-candidates g distance current-node visited candidates)]
+  (let [candidates (add-candidates g distance current-node target-node visited candidates)]
     (let [[to from distance-result :as me] (min-edge candidates)
           v (conj visited me)]
       (cond
